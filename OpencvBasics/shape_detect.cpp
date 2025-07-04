@@ -14,7 +14,7 @@ int main(void){
     cv::Rect bbox = cv::boundingRect(c);
     if (bbox.height > 30 && bbox.width > 10) {
         cv::Mat digit = img_border(bbox);
-        cv::resize(digit, digit, cv::Size(480, 480));
+        cv::resize(digit, digit, cv::Size(480, 28));
         cv::imshow("contour", digit);
         cv::waitKey(0);
      }
