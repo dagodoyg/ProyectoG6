@@ -5,6 +5,9 @@ int main(void){
     cv::Mat img_border, img_contour;
 
     preprocessing(img, img_border);
+
+    cv::imshow("",img_border);
+    cv::waitKey(0);
     
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
@@ -14,15 +17,11 @@ int main(void){
     cv::Rect bbox = cv::boundingRect(c);
     if (bbox.height > 30 && bbox.width > 10) {
         cv::Mat digit = img_border(bbox);
-        cv::resize(digit, digit, cv::Size(480, 28));
         cv::imshow("contour", digit);
         cv::waitKey(0);
-     }
+        }
     }   
 
-
-    cv::imshow("Numeros", img);
-    cv::imshow("Canny", img_border);
     cv::waitKey(0);
 
     return 0;
