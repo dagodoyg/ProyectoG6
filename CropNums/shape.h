@@ -4,13 +4,16 @@
 #include <opencv2/opencv.hpp>
 
 struct shape{
-    std::vector<cv::Point> border;
     cv::Rect box;
     cv::Mat digit;
+    cv::Mat S_map;
+    double S;
 
-    shape(const std::vector<cv::Point> & contour, const cv::Mat & img)
-        :   border(contour),
-            box(cv::boundingRect(contour)),
-            digit(img(box))
+    shape(cv::Rect box_, cv::Mat digit_, cv::Mat S_map_, double S_)
+        :
+            box(box_),
+            digit(digit_),
+            S_map(S_map_),
+            S(S_)
             {}
 };
