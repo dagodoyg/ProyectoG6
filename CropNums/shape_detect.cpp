@@ -15,10 +15,7 @@ int main(int argc, char** argv){
     //Declare parameters
     std::map<std::string, double> p;
     p["D_SIZE"] = 28;
-    p["K_SIZE"] = 3;
-    p["SNOISE_LVL"] = 0.67243027;
-    p["SNOISE_SIG"] = 0.00182435;
-    p["N_SIG"] = 100;
+    p["K_SIZE"] = 7;
 
     //Read image
     std::string ImgPath = argv[1];
@@ -53,6 +50,8 @@ int main(int argc, char** argv){
         if (box.width > 1.5*box.height) continue;
         if (box.area() < 0.01*img.cols*img.rows) continue;
 
+        cv::resize(cv_digit,cv_digit,cv::Size(p["D_SIZE"],p["D_SIZE"]));
+
         //Transform to proper format for dlib
         cv::bitwise_not(cv_digit, cv_digit);
         dlib::array2d<unsigned char> dlib_digit;
@@ -60,17 +59,10 @@ int main(int argc, char** argv){
 
         //Store only valid data as struct vector
         Figs.emplace_back(box, dlib_digit);
-
-        cv::imshow("", cv_digit);
-        cv::waitKey(0);
     }
 
     //Sort by position, row major
     std::sort(Figs.begin(), Figs.end());
-    for (auto & c : Figs )
-    {
-       std::cout << c.x1 << std::endl;
-    }
-    
+
     return 0;
 }
