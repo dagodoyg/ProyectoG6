@@ -9,7 +9,7 @@ double stddev(const std::valarray<double>& data);
 double mean(const std::valarray<double>& data);
 
 int main(void){
-    int N = 1000;
+    int N = 10000;
     std::vector<noise_map> candela(N);
     std::valarray<double> S(N);
 
@@ -20,7 +20,7 @@ int main(void){
     }
 
     std::cout << std::fixed << std::setprecision(8);
-    std::cout << "mean S: " << mean(S) << "\t" << "stddev: " << stddev(S) << std::endl;
+    std::cout << "mean S_p: " << mean(S) << "\t" << "stddev: " << stddev(S) << std::endl;
 
     return 0;
 }
@@ -54,7 +54,7 @@ double entropy_b64(const cv::Mat & InputMat, cv::Mat & S_map){
         }
     }
 
-    return S;
+    return S/(16*16);
 }
 
 double mean(const std::valarray<double>& data) {
