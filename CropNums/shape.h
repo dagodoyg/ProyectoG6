@@ -7,15 +7,16 @@
 #include <dlib/image_processing.h>
 #include <dlib/gui_widgets.h>
 
-struct shape {
+struct Shape {
     int x1, y1, x2, y2;  //Positions of lt and br corners
     dlib::array2d<unsigned char> digit;
 
-    bool operator<(const shape& a) const{
-        return x1 < a.x1;
+    bool operator<(const Shape & a) const{  //overwrite the operator for sorting
+        if ( std::abs(y1 - a.y1) < 0.1*( y2 - y1) ) return x1 < a.x1;
+        return y1 < a.y1;
     }
 
-    shape(cv::Rect BOX_, dlib::array2d<unsigned char> & DIGIT_)
+    Shape(cv::Rect BOX_, dlib::array2d<unsigned char> & DIGIT_)  //constructor
         : x1(BOX_.x), y1(BOX_.y),
           x2(x1 + BOX_.width), y2(y1 + BOX_.height)
         {
