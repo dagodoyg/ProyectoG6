@@ -1,68 +1,43 @@
-#include "noise_map.h"
 #include <string>
 #include <valarray>
 #include <cmath>
+#include <iostream>
+#include <vector>
+#include <opencv2/opencv.hpp>
+#include <dlib/matrix.h>
+#include <dlib/opencv.h>
+#include <opencv2/opencv.hpp>
 
-void preprocessing(const cv::Mat & InputMat, cv::Mat & OutMat);
-double entropy_b64(const cv::Mat & InputMat, cv::Mat & S_map);
-double stddev(const std::valarray<double>& data);
-double mean(const std::valarray<double>& data);
+template <typename image_t>
+void svm_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
+    cv::resize(cv_digit,cv_digit,cv::Size(D_SIZE,D_SIZE));
+    cv::bitwise_not(cv_digit, cv_digit); //Black letter over white background
+    //cv::transpose(cv_digit,cv_digit);  //Transpose, cv::Mat is row major, dlib::matrix is column major
+    cv_digit.convertTo(cv_digit, CV_8UC1); 
+
+    if (!cv_digit.isContinuous()) cv_digit = cv_digit.clone() ; //Force contiguity
+
+    dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(cv_digit));
+}
 
 int main(void){
-    int N = 10000;
-    std::vector<noise_map> candela(N);
-    std::valarray<double> S(N);
+    using ImageF = dlib::matrix<unsigned char>;
+    int N = 6000;
+    int D_SIZE = 28;
+    std::vector<cv::Mat> cv_candela(N);
+    std::vector<ImageF> dlib_candela(N);
+    std::vector<long> candela_labels(N, -1);
 
-    for (int idx{0}; idx<candela.size(); idx++) {
-        cv::randu(candela[idx].N_map, 0, 256);
-        cv::threshold(candela[idx].S_map, candela[idx].S_map, 128, 255, cv::THRESH_BINARY);
-        S[idx] = entropy_b64( candela[idx].N_map , candela[idx].S_map);
+    for (int idx{0}; idx < N/2; idx++) {
+        cv_candela[idx] = cv::Mat::zeros(D_SIZE, D_SIZE, CV_8UC1);
+        cv::randu(cv_candela[idx], 0, 255);
+        svm_format(cv_candela[idx],dlib_candela[idx],D_SIZE);
     }
-
-    std::cout << std::fixed << std::setprecision(8);
-    std::cout << "mean S_p: " << mean(S) << "\t" << "stddev: " << stddev(S) << std::endl;
-
-    return 0;
-}
-
-double entropy_b64(const cv::Mat & InputMat, cv::Mat & S_map){
-    if (InputMat.cols!=48 || InputMat.rows!=48){ std::cerr << "image must be 64x64" << std::endl; return 0;}
-
-    cv::Mat Input_float;
-    InputMat.convertTo(Input_float, CV_32F, 1.0 / 255.0);
+    for (int idx{N/2}; idx < N; idx++) {
+        cv_candela[idx] = cv::Mat::zeros(D_SIZE, D_SIZE, CV_8UC1);
+        cv::randn(cv_candela[idx], 128, 32);
+        svm_format(cv_candela[idx],dlib_candela[idx],D_SIZE);
+    }
     
-    cv::Mat p0, p1, log_p0, log_p1, S_map_raw;
-    cv::blur(Input_float,p1,cv::Size(3,3));
-
-    p0 = 1.0 - p1;
-
-    cv::log(p0, log_p0);
-    cv::log(p1, log_p1);
-    cv::patchNaNs(log_p0,0);
-    cv::patchNaNs(log_p1,0);
-
-    S_map_raw = -p0.mul(log_p0) - p1.mul(log_p1);
-    S_map = cv::Mat::zeros(cv::Size(16,16),CV_32F);
-    double S{0};
-    double h{0};
-
-    for (int ii{0}; ii < 16; ii++){
-        for (int jj{0}; jj < 16; jj++){
-            h = S_map_raw.at<float>(2 + 3*ii, 2 + 3*jj);
-            S_map.at<float>(ii,jj) = h;
-            S += h;
-        }
-    }
-
-    return S/(16*16);
-}
-
-double mean(const std::valarray<double>& data) {
-    return data.sum() / data.size();
-}
-
-double stddev(const std::valarray<double>& data) {
-    double m = mean(data);
-    std::valarray<double> diff = data - m;
-    return std::sqrt((diff * diff).sum() / data.size());
+    return 0;
 }
