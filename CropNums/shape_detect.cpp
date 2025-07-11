@@ -1,6 +1,7 @@
 #include "shape.h"
 #include "others.h"
 #include <string>
+#include <cstring>
 #include <valarray>
 #include <cmath>
 #include <map>
@@ -13,9 +14,7 @@
 int main(int argc, char** argv){
 
     //Declare parameters
-    std::map<std::string, double> p;
-    p["D_SIZE"] = 28;
-    p["K_SIZE"] = 7;
+    const int D_SIZE = 28;
 
     //Read image
     std::string ImgPath = argv[1];
@@ -33,8 +32,7 @@ int main(int argc, char** argv){
     
     //Get contours
     std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(img_border, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    contour_detector(img_border, contours);
     
     std::vector<Shape> Figs;
     int idx{0};
@@ -50,12 +48,9 @@ int main(int argc, char** argv){
         if (box.width > 1.5*box.height) continue;
         if (box.area() < 0.01*img.cols*img.rows) continue;
 
-        cv::resize(cv_digit,cv_digit,cv::Size(p["D_SIZE"],p["D_SIZE"]));
-
-        //Transform to proper format for dlib
-        cv::bitwise_not(cv_digit, cv_digit);
-        dlib::array2d<unsigned char> dlib_digit;
-        dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(cv_digit));
+        //Transform to proper format for dlib svm
+        dlib::matrix<double, D_SIZE*D_SIZE, 1> dlib_digit;
+        svm_format(cv_digit,dlib_digit,D_SIZE);
 
         //Store only valid data as struct vector
         Figs.emplace_back(box, dlib_digit);
