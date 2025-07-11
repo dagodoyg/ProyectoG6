@@ -10,8 +10,8 @@ int main(void){
     std::vector<double> labels = load_mnist_labels("./database/train-labels.idx1-ubyte");
     dlib::randomize_samples(data,labels);
 
-    std::vector<ImageF> data_reduced(data.begin(), data.end());
-    std::vector<double> labels_reduced(labels.begin(), labels.end());
+    std::vector<ImageF> data_reduced(data.begin(), data.begin()+10000);
+    std::vector<double> labels_reduced(labels.begin(), labels.begin()+10000);
 
     using rbf_kernel = dlib::radial_basis_kernel<ImageF>;
 
@@ -21,7 +21,7 @@ int main(void){
     using ovo_trainer = dlib::one_vs_one_trainer<dlib::any_trainer<ImageF>>;
     ovo_trainer trainer;
     trainer.set_trainer(svm_trainer);
-    trainer.set_num_threads(16);
+    trainer.set_num_threads(8);
 
     std::cout << "Training...\n";
     dlib::one_vs_one_decision_function<ovo_trainer> df = trainer.train(data_reduced, labels_reduced);
@@ -32,7 +32,7 @@ int main(void){
     std::cout << "Saving...\n";
     dlib::one_vs_one_decision_function<ovo_trainer, dlib::decision_function<rbf_kernel>> df2;
     df2 = df;
-    dlib::serialize("df.dat") << df2;
+    dlib::serialize("df2.dat") << df2;
     
     dlib::one_vs_one_decision_function<ovo_trainer>::binary_function_table functs;
     functs = df.get_binary_decision_functions();
