@@ -1,6 +1,10 @@
 #include <dlib/dnn.h>
 #include <dlib/data_io.h>
+#include <dlib/matrix.h>
+#include <opencv2/opencv.hpp>
+#include <dlib/opencv.h>
 #include <iostream>
+#include <vector>
 
 int main(void){
 
@@ -25,11 +29,10 @@ int main(void){
     trainer.set_mini_batch_size(128);
     trainer.be_verbose();
     trainer.set_synchronization_file("mnist_sync", std::chrono::seconds(20));
-
     trainer.train(data,labels);
 
     net.clean();
-    dlib::serialize("mnist_network.dat") << net;
+    dlib::serialize("network.dat") << net;
 
     std::vector<unsigned long> predicted_labels = net(test_data);
     int num_right = 0;
@@ -48,3 +51,4 @@ int main(void){
 
     return 0;
 }
+
