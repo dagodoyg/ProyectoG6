@@ -32,7 +32,7 @@ int main(void){
     trainer.train(data,labels);
 
     net.clean();
-    dlib::serialize("network.dat") << net;
+    dlib::serialize("../dnnTrain/network.dat") << net;
 
     std::vector<unsigned long> predicted_labels = net(test_data);
     int num_right = 0;
