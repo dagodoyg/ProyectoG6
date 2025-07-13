@@ -1,21 +1,29 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <dlib/opencv.h>
+#include <algorithm>
 #include "shape.h"
 
-void preprocessing(const cv::Mat & InputMat, cv::Mat & OutMat);
-void contour_detector(const cv::Mat & img_border, std::vector<std::vector<cv::Point>> & contours);
-
 template <typename image_t>
-void svm_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
-    cv::resize(cv_digit,cv_digit,cv::Size(D_SIZE,D_SIZE));
-    cv::bitwise_not(cv_digit, cv_digit); //Black letter over white background
-    //cv::transpose(cv_digit,cv_digit);  //Transpose, cv::Mat is row major, dlib::matrix is column major
-    cv_digit.convertTo(cv_digit, CV_8UC1); //Convert to double for dlib
+void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
 
-    if (!cv_digit.isContinuous()) cv_digit = cv_digit.clone() ; //Force contiguity
+    int w = std::max(cv_digit.rows,cv_digit.cols);
+    cv::Mat background(w*1.2, w*1.2, CV_8UC1, cv::Scalar(0));
 
-    dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(cv_digit));
+    cv::Moments m = cv::moments(cv_digit, true);
+    int cx = static_cast<int>(m.m10 / m.m00);
+    int cy = static_cast<int>(m.m01 / m.m00);
+    int x = background.cols/2 - cx;
+    int y = background.rows/2 - cy;
+
+    cv::Rect place(x, y, cv_digit.cols, cv_digit.rows);
+    cv_digit.copyTo(background(place));
+
+    cv::resize(background, background, cv::Size(D_SIZE,D_SIZE));
+    //cv::bitwise_not(background,background);
+    background.convertTo(background, CV_8UC1);
+
+    dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(background));
 }
 
 template<int D_SIZE>
@@ -30,13 +38,14 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
     }
 
     //Preprocessing for border detection
-    preprocessing(img, img_border);
+    cv::cvtColor(img,img_border,cv::COLOR_BGR2GRAY);
+    cv::threshold(img_border, img_border, 0, 255, cv::THRESH_BINARY_INV +  cv::THRESH_OTSU);
     
     //Get contours
     std::vector<std::vector<cv::Point>> contours;
-    contour_detector(img_border, contours);
-    std::cout << contours.size() << std::endl;
-    
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(img_border, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
     int idx{0};
     for (int ii{0}; ii<contours.size(); ii++) {
 
@@ -49,9 +58,12 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
         if (box.width > 1.5*box.height) continue;
         if (box.area() < 0.01*img.cols*img.rows) continue;
 
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
+        cv::dilate(cv_digit,cv_digit,kernel);
+
         //Transform to proper format for dlib svm
         ImageF dlib_digit;
-        svm_format(cv_digit,dlib_digit,D_SIZE);
+        dnn_format(cv_digit,dlib_digit,D_SIZE);
 
         //Store only valid data as struct vector
         Figs.emplace_back(box, dlib_digit);
@@ -59,6 +71,6 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
 
     //Sort by position, row major
     std::sort(Figs.begin(), Figs.end());
-    std::cout << Figs.size() << std::endl;
 
 }
+

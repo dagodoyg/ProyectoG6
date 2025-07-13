@@ -1,6 +1,7 @@
 #include "functions.h"
 #include <dlib/dnn.h>
 #include <dlib/data_io.h>
+#include <dlib/image_io.h>
 #include <iostream>
 
 int main(int argc, char** argv){
@@ -19,14 +20,14 @@ int main(int argc, char** argv){
                                 >>>>>>>>>>>>;
     net_type net;
 
-    dlib::deserialize("mnist_network.dat") >> net;
-    dlib::image_window win;
-    win.set_image(Figs[0].digit);
-    win.wait_until_closed();
-    std::cout << Figs.size() << std::endl;
-    int x = net(Figs[0].digit); 
-    std::cout << "Clase predicha: " << x << std::endl;
-    
+    dlib::deserialize("network.dat") >> net;
+
+    for (int idx{0}; idx < Figs.size(); idx++){
+        dlib::image_window win;
+        win.set_image(Figs[idx].digit);
+        win.wait_until_closed();
+        std::cout << net(Figs[idx].digit) << std::endl; 
+    }
 
     return 0;
 }
