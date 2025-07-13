@@ -22,11 +22,19 @@ int main(int argc, char** argv){
 
     dlib::deserialize("network.dat") >> net;
 
+    int behind = Figs[0].y1;
+    std::cout << std::endl;
     for (int idx{0}; idx < Figs.size(); idx++){
-        dlib::image_window win;
-        win.set_image(Figs[idx].digit);
-        win.wait_until_closed();
-        std::cout << net(Figs[idx].digit) << std::endl; 
+
+        int ahead = Figs[idx].y1;
+
+        if( std::abs(ahead - behind) > 0.2*( Figs[idx].y2 - Figs[idx].y1) ){
+            std::cout << std::endl << " " << net(Figs[idx].digit);
+        } else {
+            std::cout << " " << net(Figs[idx].digit);
+        }
+
+        behind = ahead;
     }
 
     return 0;

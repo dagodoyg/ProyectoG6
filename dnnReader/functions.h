@@ -8,13 +8,13 @@ template <typename image_t>
 void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
 
     int w = std::max(cv_digit.rows,cv_digit.cols);
-    cv::Mat background(w*1.2, w*1.2, CV_8UC1, cv::Scalar(0));
-
+    cv::Mat background(w*1.3, w*1.3, CV_8UC1, cv::Scalar(0));
+           
     cv::Moments m = cv::moments(cv_digit, true);
     int cx = static_cast<int>(m.m10 / m.m00);
     int cy = static_cast<int>(m.m01 / m.m00);
-    int x = background.cols/2 - cx;
-    int y = background.rows/2 - cy;
+    int x = std::max(0,background.cols/2 - cx);
+    int y = std::max(0,background.rows/2 - cy);
 
     cv::Rect place(x, y, cv_digit.cols, cv_digit.rows);
     cv_digit.copyTo(background(place));
@@ -57,9 +57,6 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
         //Check primitive conditions
         if (box.width > 1.5*box.height) continue;
         if (box.area() < 0.01*img.cols*img.rows) continue;
-
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
-        cv::dilate(cv_digit,cv_digit,kernel);
 
         //Transform to proper format for dlib svm
         ImageF dlib_digit;

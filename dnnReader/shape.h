@@ -14,7 +14,7 @@ struct Shape {
     ImageF digit;
 
     bool operator<(const Shape & a) const{  //overwrite the operator for sorting
-        if ( std::abs(y1 - a.y1) < 0.1*( y2 - y1) ) return x1 < a.x1;
+        if ( std::abs(y1 - a.y1) < 0.2*( y2 - y1) ) return x1 < a.x1;
         return y1 < a.y1;
     }
 
