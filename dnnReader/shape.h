@@ -20,8 +20,7 @@ struct Shape {
 
     Shape(cv::Rect BOX_, ImageF & DIGIT_)  //constructor
         : x1(BOX_.x), y1(BOX_.y),
-          x2(x1 + BOX_.width), y2(y1 + BOX_.height)
-        {
-            dlib::assign_image(digit,DIGIT_);
-        }
+          x2(x1 + BOX_.width), y2(y1 + BOX_.height),
+          digit(DIGIT_)
+        {}
 };

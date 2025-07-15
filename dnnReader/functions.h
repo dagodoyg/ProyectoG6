@@ -20,8 +20,10 @@ void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
     cv_digit.copyTo(background(place));
 
     cv::resize(background, background, cv::Size(D_SIZE,D_SIZE));
-    //cv::bitwise_not(background,background);
     background.convertTo(background, CV_8UC1);
+
+    //cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2,2));
+    //cv::dilate(background,background,kernel);
 
     dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(background));
 }
@@ -46,19 +48,15 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(img_border, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
-    int idx{0};
-    for (int ii{0}; ii<contours.size(); ii++) {
-
-        //Getting the digit as cv::Mat
-        std::vector<cv::Point> c_ii = contours[ii];
+    for (auto c_ii : contours) {
         cv::Rect box = cv::boundingRect(c_ii);
         cv::Mat cv_digit = img_border(box);
 
         //Check primitive conditions
-        if (box.width > 1.5*box.height) continue;
         if (box.area() < 0.01*img.cols*img.rows) continue;
+        if (box.width > 1.5*box.height) continue;
 
-        //Transform to proper format for dlib svm
+        //Transform to proper format for dlib mnist dnn
         ImageF dlib_digit;
         dnn_format(cv_digit,dlib_digit,D_SIZE);
 
@@ -70,4 +68,3 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
     std::sort(Figs.begin(), Figs.end());
 
 }
-
