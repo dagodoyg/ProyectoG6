@@ -5,7 +5,7 @@
 #include "shape.h"
 
 template <typename image_t>
-void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
+void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE, bool dil){
 
     int w = std::max(cv_digit.rows,cv_digit.cols);
     cv::Mat background(w*1.3, w*1.3, CV_8UC1, cv::Scalar(0));
@@ -19,17 +19,20 @@ void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE){
     cv::Rect place(x, y, cv_digit.cols, cv_digit.rows);
     cv_digit.copyTo(background(place));
 
+
+    if(dil){
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+        cv::dilate(background,background,kernel);
+    }
+
     cv::resize(background, background, cv::Size(D_SIZE,D_SIZE));
     background.convertTo(background, CV_8UC1);
-
-    //cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2,2));
-    //cv::dilate(background,background,kernel);
 
     dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(background));
 }
 
 template<int D_SIZE>
-void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
+void crop_nums(std::string ImgPath, std::vector<Shape> & Figs, bool dil){
     cv::Mat img = cv::imread(ImgPath);
     cv::Mat img_border;
 
@@ -58,7 +61,7 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs){
 
         //Transform to proper format for dlib mnist dnn
         ImageF dlib_digit;
-        dnn_format(cv_digit,dlib_digit,D_SIZE);
+        dnn_format(cv_digit,dlib_digit,D_SIZE, dil);
 
         //Store only valid data as struct vector
         Figs.emplace_back(box, dlib_digit);

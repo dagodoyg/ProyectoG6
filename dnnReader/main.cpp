@@ -8,7 +8,16 @@ int main(int argc, char** argv){
     std::string ImgPath = argv[1];
     std::vector<Shape> Figs;
 
-    crop_nums<28>(ImgPath, Figs);
+    auto fun = [](std::string s){
+        if(std::stoi(s)==1) return true;
+        if(std::stoi(s)==0) return false;
+        std::cerr << "Invalid input in second argument, no dilation by default" << std::endl;
+        return false;
+    };
+
+    bool dil = fun(argv[2]); //bool for yes or no dilation
+
+    crop_nums<28>(ImgPath, Figs, dil);
 
     using net_type = dlib::loss_multiclass_log<
                                 dlib::fc<10,        
@@ -44,3 +53,16 @@ int main(int argc, char** argv){
 
     return 0;
 }
+
+/* @echo off
+g++ -std=c++17 ^
+ -IC:/Users/david/opencv_build/install/include ^
+ -IC:/Users/david/opencv_build/install/include/opencv2 ^
+ -IC:/Users/david/src/dlib/build/install/include ^
+ -LC:/Users/david/opencv_build/install/x64/mingw/lib ^
+ -LC:/Users/david/src/dlib/build/install/lib ^
+ %* ^
+ -ldlib -lopencv_world4120 ^
+ -luser32 -lgdi32 -limm32 -lole32 -loleaut32 ^
+ -luuid -lcomdlg32 -lavifil32 -lwinmm -lcomctl32 -lpthread
+ */
