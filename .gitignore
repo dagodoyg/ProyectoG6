@@ -3,3 +3,6 @@ Dumpster/
 dnnTrain/mnist_sync
 dnnTrain/mnist_sync_
 dnnReader/*.jpeg
+dnnReader/*.jpg
+dnnReader/*.png
+dnnReader/Dockerfile
