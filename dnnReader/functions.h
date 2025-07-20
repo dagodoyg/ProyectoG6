@@ -8,33 +8,33 @@ template <typename image_t>
 void dnn_format(cv::Mat & cv_digit, image_t & dlib_digit, const int & D_SIZE, bool dil){
 
     int w = std::max(cv_digit.rows,cv_digit.cols);
-    cv::Mat background(w*1.3, w*1.3, CV_8UC1, cv::Scalar(0));
+    cv::Mat background(w*1.3, w*1.3, CV_8UC1, cv::Scalar(0));  //Create bigger black background
            
-    cv::Moments m = cv::moments(cv_digit, true);
+    cv::Moments m = cv::moments(cv_digit, true);  //Find center of mass
     int cx = static_cast<int>(m.m10 / m.m00);
     int cy = static_cast<int>(m.m01 / m.m00);
     int x = std::max(0,background.cols/2 - cx);
     int y = std::max(0,background.rows/2 - cy);
 
-    cv::Rect place(x, y, cv_digit.cols, cv_digit.rows);
+    cv::Rect place(x, y, cv_digit.cols, cv_digit.rows);  //Copy to background
     cv_digit.copyTo(background(place));
 
 
     if(dil){
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));  //Optional dilation for thin lines
         cv::dilate(background,background,kernel);
     }
 
-    cv::resize(background, background, cv::Size(D_SIZE,D_SIZE));
+    cv::resize(background, background, cv::Size(D_SIZE,D_SIZE));  //Resize to MNIST database size
     background.convertTo(background, CV_8UC1);
 
-    dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(background));
+    dlib::assign_image(dlib_digit, dlib::cv_image<unsigned char>(background));  //Assign to dlib matrix for dnn
 }
 
-template<int D_SIZE>
+template<int D_SIZE> //Get size of img in MNIST as template arg, it must be known in compilation time
 void crop_nums(std::string ImgPath, std::vector<Shape> & Figs, bool dil){
-    cv::Mat img = cv::imread(ImgPath);
-    cv::Mat img_border;
+    cv::Mat img = cv::imread(ImgPath);  //Read img from file
+    cv::Mat img_border;  //Blank image to store modified img
 
     //Check for empty image input
     if (img.empty()) {
@@ -52,6 +52,7 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs, bool dil){
     cv::findContours(img_border, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
     for (auto c_ii : contours) {
+        //Get the bounding square of current contour
         cv::Rect box = cv::boundingRect(c_ii);
         cv::Mat cv_digit = img_border(box);
 
@@ -63,7 +64,7 @@ void crop_nums(std::string ImgPath, std::vector<Shape> & Figs, bool dil){
         ImageF dlib_digit;
         dnn_format(cv_digit,dlib_digit,D_SIZE, dil);
 
-        //Store only valid data as struct vector
+        //Store only valid data as struct vector element
         Figs.emplace_back(box, dlib_digit);
     }
 

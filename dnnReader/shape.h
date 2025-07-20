@@ -5,7 +5,6 @@
 #include <dlib/image_io.h>
 #include <dlib/pixel.h>
 #include <dlib/image_processing.h>
-#include <dlib/gui_widgets.h>
 
 using ImageF = dlib::matrix<unsigned char>;
 

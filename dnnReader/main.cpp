@@ -5,38 +5,36 @@
 #include <iostream>
 
 int main(int argc, char** argv){
-    std::string ImgPath = argv[1];
-    std::vector<Shape> Figs;
+    std::string ImgPath = argv[1];  //Get img path from command line
+    std::vector<Shape> Figs;  //Create vector of potential digits
 
     auto fun = [](std::string s){
         if(std::stoi(s)==1) return true;
         if(std::stoi(s)==0) return false;
         std::cerr << "Invalid input in second argument, no dilation by default" << std::endl;
         return false;
-    };
+    };  //Dilation from commando line
 
     bool dil = fun(argv[2]); //bool for yes or no dilation
 
-    crop_nums<28>(ImgPath, Figs, dil);
+    crop_nums<28>(ImgPath, Figs, dil);  //Extract digit candidates and store in vector of objects
 
-    using net_type = dlib::loss_multiclass_log<
-                                dlib::fc<10,        
-                                dlib::relu<dlib::fc<84,   
-                                dlib::relu<dlib::fc<120,  
-                                dlib::max_pool<2,2,2,2,dlib::relu<dlib::con<16,5,5,1,1,
-                                dlib::max_pool<2,2,2,2,dlib::relu<dlib::con<6,5,5,1,1,
-                                dlib::input<dlib::matrix<unsigned char>> 
+    using net_type = dlib::loss_multiclass_log< //Multiclass dnn
+                                dlib::fc<10, //10 classes (10 neurons in final layer)
+                                dlib::relu<dlib::fc<84,   //84 neurons in layer 2
+                                dlib::relu<dlib::fc<120,  //120 neurons in layer 1
+                                dlib::max_pool<2,2,2,2,dlib::relu<dlib::con<16,5,5,1,1,  //ReLU, second convolution with 16 5x5 filters and 2x2 stride
+                                dlib::max_pool<2,2,2,2,dlib::relu<dlib::con<6,5,5,1,1,  //ReLU, first convolution with 6 5x5 filters and 2x2 stride
+                                dlib::input<dlib::matrix<unsigned char>>  //Receives grey scale images in uint8
                                 >>>>>>>>>>>>;
     net_type net;
 
-    dlib::deserialize("network.dat") >> net;
+    dlib::deserialize("network.dat") >> net;  //Deserialize the trained dnn
 
+    //Print in order
     int behind1 = Figs[0].y1;
     int behind2 = Figs[0].y2;
     for (int idx{0}; idx < Figs.size(); idx++){
-        dlib::image_window win;
-        win.set_image(Figs[idx].digit);
-        win.wait_until_closed();
 
         int ahead1 = Figs[idx].y1;
         int ahead2 = Figs[idx].y2;
@@ -50,19 +48,12 @@ int main(int argc, char** argv){
         behind1 = ahead1;
         behind2 = ahead2;
     }
+    std::cout << std::endl;
 
     return 0;
 }
 
-/* @echo off
-g++ -std=c++17 ^
- -IC:/Users/david/opencv_build/install/include ^
- -IC:/Users/david/opencv_build/install/include/opencv2 ^
- -IC:/Users/david/src/dlib/build/install/include ^
- -LC:/Users/david/opencv_build/install/x64/mingw/lib ^
- -LC:/Users/david/src/dlib/build/install/lib ^
- %* ^
- -ldlib -lopencv_world4120 ^
- -luser32 -lgdi32 -limm32 -lole32 -loleaut32 ^
- -luuid -lcomdlg32 -lavifil32 -lwinmm -lcomctl32 -lpthread
- */
+/*  g++ main.cpp -std=c++17
+    -ldlib -lpthread -ljpeg -lpng -lwebp
+    -llapack -lblas
+    $(pkg-config --cflags --libs opencv4) */
